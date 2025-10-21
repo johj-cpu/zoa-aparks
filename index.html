@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Zoaïa Park — PWA</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#6f3cff">
+  <style>
+    :root{--violet:#6f3cff;--violet2:#4a23cc;--orange:#ff8a00;--gold:#f6d36f;--bg:#0b0b14;--glass:rgba(255,255,255,.10);--ink:#f7f7ff;--ok:#19c37d}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto;color:var(--ink);
+      background:radial-gradient(1200px 700px at 70% -20%, rgba(255,138,0,.25), transparent 60%),
+                 radial-gradient(1200px 800px at 20% 120%, rgba(111,60,255,.25), transparent 60%),var(--bg);
+      min-height:100vh;display:flex;justify-content:center;align-items:center}
+    .phone{width:392px;height:820px;border:1px solid #222;border-radius:22px;overflow:hidden;position:relative;background:#0e0e18;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+    header{padding:18px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg, rgba(111,60,255,.35), rgba(0,0,0,0))}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:900}.logo{width:32px;height:32px;border-radius:10px;background:conic-gradient(from 220deg,#f6d36f,#ff8a00,#6f3cff)}
+    .pill{padding:6px 10px;border-radius:999px;background:var(--glass);backdrop-filter:blur(8px);font-size:12px;color:#d9d9ff}
+    .screen{position:absolute;inset:64px 0 84px;overflow:auto;padding:14px}
+    .card{background:var(--glass);backdrop-filter: blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;margin-bottom:12px}
+    .btn{display:inline-block;padding:12px 16px;border-radius:14px;background:linear-gradient(180deg,var(--gold),#eec24b);color:#151515;font-weight:900;border:none;cursor:pointer}
+    .btn.secondary{background:linear-gradient(180deg,var(--violet),var(--violet2));color:#fff}
+    .input{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff;padding:12px;border-radius:12px;width:100%}
+    .list{display:grid;gap:10px}.item{display:flex;justify-content:space-between;align-items:center;padding:12px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15)}
+    nav{position:absolute;left:0;right:0;bottom:0;height:84px;display:flex;gap:6px;align-items:center;justify-content:space-around;background:rgba(14,14,24,.88);backdrop-filter: blur(10px);border-top:1px solid rgba(255,255,255,.08)}
+    nav button{background:transparent;border:none;color:#dcdcf5;display:grid;place-items:center;gap:6px;cursor:pointer}nav button.active{color:#fff}
+    .qr{width:148px;height:148px;border-radius:12px;background:#fff;display:grid;place-items:center;overflow:hidden;margin:8px 0}.qr canvas{width:148px;height:148px}
+  </style>
+</head>
+<body>
+<div class="phone" role="application" aria-label="Zoaïa App">
+  <header><div class="brand"><div class="logo"></div> Zoaïa Park</div><div class="pill">PWA</div></header>
+  <main id="screens">
+    <section id="home" class="screen">
+      <div class="card" style="text-align:center">
+        <h1>Zoaïa App</h1>
+        <div style="color:#ffd58a;font-weight:700">La vie en fête !</div>
+        <div style="margin-top:10px">
+          <button class="btn" onclick="go('tickets')">Acheter un Pass</button>
+          <button class="btn secondary" onclick="go('wallet')">Recharger</button>
+        </div>
+      </div>
+      <div class="card"><h2>État du parc</h2><p>🟢 Ouvert aujourd’hui <strong>13:00 → 01:00</strong></p><p>🛡️ Sécurité renforcée & contrôle RFID</p><p>🎧 DJ Night à 21:30</p></div>
+    </section>
+
+    <section id="tickets" class="screen" hidden>
+      <div class="card"><h1>Billetterie / Pass</h1>
+        <div class="list">
+          <div class="item"><span>Entrée simple</span><strong>7 000 F</strong></div>
+          <div class="item"><span>Pass 10 manèges</span><strong>15 000 F</strong></div>
+          <div class="item"><span>Pass Illimité (1 jour)</span><strong>20 000 F</strong></div>
+          <div class="item"><span>Pass VIP</span><strong>30 000 F</strong></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <select id="passType" class="input"><option>Entrée simple</option><option>10 manèges</option><option>Illimité</option><option>VIP</option></select>
+          <button class="btn" onclick="buy()">Acheter</button>
+          <button class="btn" onclick="go('bracelet')">→ Bracelet</button>
+        </div>
+      </div>
+      <div class="card"><h2>Mes billets</h2><div id="ticketsList" class="list"></div></div>
+    </section>
+
+    <section id="bracelet" class="screen" hidden>
+      <div class="card"><h1>Mon Bracelet RFID</h1>
+        <p>ID : <span id="rfid" style="padding:4px 8px;background:rgba(255,255,255,.16);border-radius:999px">—</span></p>
+        <p>Statut : <span id="status" style="padding:4px 8px;background:rgba(255,255,255,.16);border-radius:999px">Non activé</span></p>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label style="font-size:12px;opacity:.8">Couleur</label>
+          <select id="color" class="input">
+            <option value="orange">Entrée simple</option>
+            <option value="bleu">Pass 10 manèges</option>
+            <option value="violet">Illimité</option>
+            <option value="rouge">VIP</option>
+          </select>
+          <button class="btn secondary" onclick="activate()">Lier</button>
+        </div>
+        <div class="qr"><canvas id="qrcanvas" width="148" height="148"></canvas></div>
+      </div>
+      <div class="card"><h2>Crédits manèges</h2>
+        <p>Solde: <strong><span id="credits">0</span></strong></p>
+        <div style="display:flex;gap:10px">
+          <button class="btn secondary" onclick="addCredits(5)">+5</button>
+          <button class="btn secondary" onclick="addCredits(10)">+10</button>
+          <button class="btn" onclick="useCredit()">Utiliser 1</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="wallet" class="screen" hidden>
+      <div class="card"><h1>Recharge & Paiement</h1>
+        <p>Portefeuille : <strong><span id="walletAmount">0</span> F</strong></p>
+        <div style="display:flex;gap:10px">
+          <button class="btn" onclick="topup(5000)">+ 5 000 F</button>
+          <button class="btn" onclick="topup(10000)">+ 10 000 F</button>
+          <button class="btn" onclick="topup(20000)">+ 20 000 F</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button id="tab-home" class="active" onclick="go('home')">🏠<span style="font-size:12px;color:#c9c9de;display:block">Accueil</span></button>
+    <button id="tab-tickets" onclick="go('tickets')">🎟️<span style="font-size:12px;color:#c9c9de;display:block">Billets</span></button>
+    <button id="tab-bracelet" onclick="go('bracelet')">🪪<span style="font-size:12px;color:#c9c9de;display:block">Bracelet</span></button>
+    <button id="tab-wallet" onclick="go('wallet')">💳<span style="font-size:12px;color:#c9c9de;display:block">Paiement</span></button>
+  </nav>
+</div>
+
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));}
+
+const state={screen:'home',rfid:null,credits:0,pass:'Aucun',wallet:0,tickets:[]};
+
+function go(s){
+  document.querySelectorAll('.screen').forEach(e=>e.hidden=true);
+  document.getElementById(s).hidden=false;
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+s)?.classList.add('active');
+  if(s==='bracelet') drawQR(); if(s==='tickets') renderTickets();
+}
+
+function randomRFID(){return 'ZP-'+Math.random().toString(36).slice(2,10).toUpperCase();}
+
+function activate(){
+  if(!state.rfid) state.rfid=randomRFID();
+  document.getElementById('rfid').textContent=state.rfid;
+  const el=document.getElementById('status'); el.textContent='Actif (aujourd’hui)'; el.style.background='rgba(25,195,125,.22)';
+}
+
+function addCredits(n){ state.credits+=n; document.getElementById('credits').textContent=state.credits; }
+function useCredit(){ if(state.credits>0){ state.credits--; document.getElementById('credits').textContent=state.credits; } }
+function topup(a){ state.wallet+=a; document.getElementById('walletAmount').textContent=state.wallet.toLocaleString('fr-FR'); }
+
+function buy(){
+  const type=document.getElementById('passType').value;
+  const price= type==='Entrée simple'?7000: type==='10 manèges'?15000: type==='Illimité'?20000:30000;
+  const id='T-'+Math.random().toString(36).slice(2,8).toUpperCase();
+  state.tickets.push({id,type,price,date:new Date().toLocaleString('fr-FR')});
+  renderTickets(); alert('Billet '+type+' acheté (simulation).');
+}
+
+function renderTickets(){
+  const el=document.getElementById('ticketsList'); if(!el) return; el.innerHTML='';
+  state.tickets.slice().reverse().forEach(t=>{
+    const d=document.createElement('div'); d.className='item';
+    d.innerHTML='<span>'+t.type+' — <span style="font-size:12px;color:#c9c9de">'+t.date+'</span></span><strong>'+t.price.toLocaleString('fr-FR')+' F</strong>';
+    el.appendChild(d);
+  });
+}
+
+function drawQR(){
+  const c=document.getElementById('qrcanvas'); if(!c) return; const ctx=c.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,c.width,c.height); ctx.fillStyle='#000';
+  for(let y=0;y<14;y++){ for(let x=0;x<14;x++){ if((x*y + x + y + (state.tickets.length||1)) % 5 === 0) ctx.fillRect(x*10+2, y*10+2, 8, 8); } }
+  ctx.fillRect(8,8,28,28); ctx.clearRect(14,14,16,16); ctx.fillRect(104,8,28,28); ctx.clearRect(110,14,16,16); ctx.fillRect(8,104,28,28); ctx.clearRect(14,110,16,16);
+}
+</script>
+</body>
+</html>
